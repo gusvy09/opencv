@@ -1,0 +1,45 @@
+ /*member.html에 적용되는 css*/
+ .popup-container {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+}
+/*버튼 스타일 */
+.popup-button {
+    padding: 10px 20px;
+    background-color: #0078d4;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+/* 커스텀 confirm 스타일 */
+.confirm-container {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+}
+/* 확인 및 취소 버튼 스타일 */
+.confirm-button {
+    background-color: #0078d4;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+.tabelth{
+    padding-right : 40px;
+}

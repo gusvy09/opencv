@@ -1,0 +1,105 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href= "../static/hello.css">
+        <title>PARK</title>
+    </head>
+<body class = "ground">
+    <div class = "tabs">
+        <div class = "btnContainer">
+          <button onclick="showmember()">주차관리</button>
+      </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8  offset-lg-2">
+                <div class = "zone">
+                    <div class = "car" id = "car1"><button class = "btn_park" id = "p1" onclick = hello(this)>park</button></div>
+                    <div class = "car" id = "car2"><button class = "btn_park" id = "p2" onclick = hello(this)>park</button></div>
+                </div>
+                <div class = "zone">
+                    <div class = "car" id = "car3"><button class = "btn_park" id = "p3" onclick = hello(this)>park</button></div>
+                    <div class = "car" id = "car4"><button class = "btn_park" id = "p4" onclick = hello(this)>park</button></div>
+                </div>
+                <div class = "zone">
+                    <div class = "car" id = "car5"><button class = "btn_park" id = "p5" onclick = hello(this)>park</button></div>
+                    <div class = "car" id = "car6"><button class = "btn_park" id = "p6" onclick = hello(this)>park</button></div>
+                </div>
+                <div class = "zone">
+                    <div class = "car" id = "car7"><button class = "btn_park" id = "p7" onclick = hello(this)>park</button></div>
+                    <img id = "videoStream" src="{{ url_for('Stream') }}" width="320", height="240">
+                    <div class = "circle" id = "circle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 로딩될때 사용하고 있는 주차자리 빨간색으로 변경
+        // car_no : 사용중인 자리 list형태로 return
+        window.onload = function(){
+        let add_data = "{{additional_data}}";
+        let car_no = JSON.parse('{{ data["zone"] | tojson | safe |replace("\'","\'")}}');
+        console.log(car_no);
+        let circle = document.getElementById('circle');
+        // 자리가 꽉 차 있으면 빨간 동그라미
+        if (car_no.length == 7){
+          circle.style.backgroundColor = "red";
+        }
+        else{
+          circle.style.backgroundColor = "#00ff00";
+        }
+        for(var i=0;i<car_no.length;i++){
+            let carid = document.getElementById(car_no[i]);
+            carid.style.borderColor = 'red';
+        }
+      }
+      // 주차장 선 div id 구해서 넘겨주기
+      function hello(clicked_id){
+        //주차장 선. div의 id값(demo) ex. car1,car2
+        let demo = clicked_id.parentNode.getAttribute('id'); 
+        console.log(demo);
+        //div의 id를 이용하여 엘리멘트를 가져옴
+        let tag = document.getElementById(demo);
+        //해당 element의 보더가 빨간색이면->초록색으로 바꿈
+        //id를 이용하여 db에 주차자리 삭제
+        if (tag.style.borderColor === 'red'){
+            send_to(demo,'red');
+            tag.style.borderColor = '#00ff00';
+        }
+        else{
+          send_to(demo,'green');
+          tag.style.borderColor = 'red';
+        }
+      }
+      //자리에 해당하는 div id값과 현재 색깔 data 보내기
+      function send_to(div_id,line_color){
+        // ajax 요청 생성
+        var xhr = new XMLHttpRequest();
+        //요청 초기화
+        xhr.open("POST","/server_endpoint",true);
+          xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+          //전송(div의 id값, 주차선 색깔)
+          xhr.send(JSON.stringify(div_id + " " +line_color));
+
+          xhr.onload = function()
+          {
+            if (xhr.status === 200) 
+            {
+              console.log("요청이 성공적으로 완료되었습니다.");
+              // 서버 응답 처리
+              var response = JSON.parse(xhr.responseText);
+              console.log("서버 응답:", response);
+              location.reload(true);
+            } 
+            else 
+            {
+              console.error("오류 발생:", xhr.status, xhr.statusText);
+            }
+          } 
+      }
+      function showmember() {
+        window.open("/member","member",`width=300,height=600,left=100,top=70`);
+      }
+    </script>
+</body>
+</html>

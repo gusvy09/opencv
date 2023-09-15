@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel = "stylesheet" href = "../static\\member.css">
+    <title>Document</title>
+    <h1 style="margin: 10px;">등록 차량</h1>
+</head>
+<body>
+    <div class = "popup-container" id = "complete">
+      <!-- 동작완료 팝업창 -->
+      <p>완료</p>
+      <button class = "popup-button" onclick = "closePopup()">확인</button>
+    </div>
+    <!-- 커스텀 confirm 대화 상자 -->
+    <div id="confirm-dialog" class="confirm-container">
+      <p>삭제하시겠습니까?</p>
+      <button class="confirm-button" onclick="confirmAction()">확인</button>
+      <button class="confirm-button" onclick="closeCustomConfirm()">취소</button>
+    </div>
+    <div>
+        <table id = "car_table">
+            <tr>
+                <th class = "tabelth">차량번호</th>
+            </tr>
+            <tbody id = "table1">
+    
+            </tbody>
+        </table>
+        <input type = "text" id = "car_no" size = "10" placeholder = "차량번호" >
+        <!-- <label for="math">장애인차량여부</label>
+        <input type="checkbox" id="h_car">  -->
+        <form action="/kakaopay/pay" method="post" target="_blank">
+          <button class = "btn_oc" onclick="change_member('add')" id = "">등록</button>
+        </form>
+        <!-- <button class = "btn_oc" onclick ="change_member('del')" >삭제</button> -->
+    </div>
+    <script>
+        // 전달 받은 데이터를 저장
+      var jsondata = JSON.parse('{{data|tojson|safe|replace("\'","\'")}}');
+      // 로딩될때 사용하고 있는 주차자리 빨간색으로 변경
+      // num_infocar : 주차등록이 되어있는 차량의 수
+      // list_parkno : 사용하고 있는 주차자리 리스트
+      window.onload = mktable();
+      //테이블 만드는 함수
+      function mktable()
+      {
+        let car_no = JSON.parse('{{ data["car_no"] | tojson | safe |replace("\'","\'")}}');
+        var table = document.getElementById('table1');
+        console.log(car_no.length);
+        console.log("등록된 차량의 수  : " + (car_no.length).toString())
+        for(var i = 0; i<car_no.length;i++)
+        {
+            let carno = car_no[i];
+            console.log(carno);
+            var row = `<tr>\n<td>${carno}</td></tr>`;
+            table.innerHTML += row;
+        }
+      }
+      //테이블에 차량번호가 있는지 검사
+      //있으면 True 없으면 False리턴
+      function check_carno(no){
+        for(var i = 0;i<car_no.length;i++){
+          let carno = car_no[i];
+          if (carno == no){return true;}
+          else{return false;}
+        }
+      }
+      //정규식 검사해서 일치하지 않으면 alert (다시 입력해주세요.)
+      //차량번호가 테이블에 있다면 alert띄우기 (이미 등록된 차량입니다.)
+      function change_member(fun)
+      {
+        console.log("버튼누른뒤 : " + jsondata.num_infocar);
+        //차량 번호 정규식
+        const regex = /^\d{2,3}[가-힣]{1}\d{4}$/gm;
+        //input에 적혀있는 text값 가져와서 공백제거 후 정규식하고 일치하는지 검사
+        let member_car_no = document.getElementById('car_no');
+        let text_member = member_car_no.value;
+        text_member = text_member.replace(/ /g,"");
+        btf = check_carno(text_member);
+        console.log(btf);
+        check = false;
+        //차량 정규식 일치하는지 검사 정규식이 일치하면 매개변수 이용해서 기능까지 붙여서 백그라운드로 전송
+        if(text_member.match(regex)){
+          if(fun == 'add'){
+            console.log("add");
+            send_carno(text_member + " add" + " " + check);
+            window.close();
+          }
+          // confirm상자
+          else if(fun == 'del'){
+            console.log("delete");
+            showCustomConfirm(text_member + " del");
+          }
+        }
+        else{
+        }
+        //나중에 추가
+        //table 개수 검사
+        let rows = document.getElementById('table1').getElementsByTagName("tr");
+        console.log(rows.length);
+        for(var i = 0;i<rows.length;i++)
+        {
+            let cells = rows[i].getElementsByTagName("td");
+            console.log("데이터 값 : " + cells[0].firstChild.data);
+        }        
+      }
+      //백그라운드에 차량번호 보내기
+      function send_carno(no){
+        var xpr = new XMLHttpRequest();
+        //요청 초기화
+        xpr.open("POST","/m_server_endpoint",true);
+          xpr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+          // 차량번호 전송
+          xpr.send(JSON.stringify(no));
+
+          xpr.onload = function()
+          {
+            if (xpr.status === 200) 
+            {
+              console.log("요청이 성공적으로 완료되었습니다.");
+              // 서버 응답 처리 
+              var response = JSON.parse(xpr.responseText);
+              console.log("서버 응답:", response);
+              // 동작을 했는지 안 했는지 받아옴.
+              // 동작하면 reload,alert 안 했으면 alert
+              if (response.work){
+                //showPopup();
+              }
+            } 
+            else 
+            {
+              console.error("오류 발생:", xpr.status, xpr.statusText);
+            }
+          } 
+      }
+      // 동작완료 팝업 나타내는 함수
+      function showPopup(){
+            let popup = document.getElementById("complete");
+            popup.style.display = "block";
+      }
+      // 동작완료 팝업창 숨김
+      function closePopup() {
+            let popup = document.getElementById("complete");
+            popup.style.display = "none";
+            //새로고침
+            location.reload(true);
+      }
+      // 커스텀 confirm 대화 상자 표시
+      function showCustomConfirm() {
+            var confirmDialog = document.getElementById("confirm-dialog");
+            confirmDialog.style.display = "block";
+        }
+      // 확인 버튼 클릭 시 처리
+      function confirmAction() {
+          // 여기서 확인 버튼을 눌렀을 때의 동작을 추가하세요.
+          let member_car_no = document.getElementById('car_no');
+          let text_member = member_car_no.value;
+          text_member = text_member.replace(/ /g,"");
+          send_carno(text_member + " del");
+          console.log(text_member);
+          closeCustomConfirm();
+      }
+
+      // 커스텀 confirm 대화 상자 숨기기
+      function closeCustomConfirm() {
+          var confirmDialog = document.getElementById("confirm-dialog");
+          confirmDialog.style.display = "none";
+      }
+      //결제창 켜질때 차량번호를 flask에 전달
+      function pay(){
+        //정보 
+        var xpr = new XMLHttpRequest();
+        //요청 초기화
+        xpr.open("POST","/m_server_endpoint",true);
+          xpr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+          // 차량번호 전송
+          xpr.send(JSON.stringify(no));
+
+          xpr.onload = function()
+          {
+            if (xpr.status === 200) 
+            {
+              console.log("요청이 성공적으로 완료되었습니다.");
+              // 서버 응답 처리 
+              var response = JSON.parse(xpr.responseText);
+              console.log("서버 응답:", response);
+              // 동작을 했는지 안 했는지 받아옴.
+              // 동작하면 reload,alert 안 했으면 alert
+              if (response.work){
+                showPopup();
+              }
+            } 
+            else 
+            {
+              console.error("오류 발생:", xpr.status, xpr.statusText);
+            }
+          } 
+      }
+    </script>
+</body>
+</html>
